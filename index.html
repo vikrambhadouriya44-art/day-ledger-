@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Write your day, get a study plan, get reminders, and prove every study block.">
+<meta name="theme-color" content="#1B2A41">
+<title>Day Ledger: plan the day, prove the study</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#EEF2F7;--sf:#fff;--ink:#1B2A41;--mu:#5B6B80;--ln:#D3DCE8;--st:#0F8B8D;--stbg:#DDF3F1;--wn:#9A5B00;--wnbg:#FFF1D6;--bd:#C0394D;--lv:#2F5BEA;--lvbg:#E6ECFF;--hd:"Bricolage Grotesque","Trebuchet MS",sans-serif;--bs:"DM Sans",system-ui,sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1621;--sf:#162233;--ink:#E6EDF6;--mu:#93A4BA;--ln:#27384F;--st:#3CC6C8;--stbg:#10393B;--wn:#F2B04D;--wnbg:#3A2B10;--bd:#FF7A8C;--lv:#8FA8FF;--lvbg:#1D2A52;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E1621;--sf:#162233;--ink:#E6EDF6;--mu:#93A4BA;--ln:#27384F;--st:#3CC6C8;--stbg:#10393B;--wn:#F2B04D;--wnbg:#3A2B10;--bd:#FF7A8C;--lv:#8FA8FF;--lvbg:#1D2A52;color-scheme:dark}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--bs)}
+main{max-width:720px;margin:0 auto;padding:20px 16px 96px}
+h1{font:800 34px/1.05 var(--hd);margin:8px 0 4px;letter-spacing:-.02em}
+.sub,.mu{color:var(--mu)}.sub{margin:0 0 18px}
+.sum{background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:14px 16px;display:grid;gap:8px}
+.sum .row2{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sum .v{font:800 30px/1 var(--hd);color:var(--st)}
+.bar{height:8px;border-radius:6px;background:var(--ln);overflow:hidden}.bar i{display:block;height:100%;background:var(--st);transition:width .4s}
+.tabs{display:flex;gap:6px;margin:16px 0 12px}
+.tabs button{flex:1;padding:10px;border:1px solid var(--ln);background:transparent;color:var(--mu);border-radius:10px;font:600 15px var(--bs);cursor:pointer}
+.tabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button{font-family:var(--bs)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--lv);outline-offset:2px}
+details{background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:12px 16px;margin-bottom:14px}
+summary{font:700 17px var(--hd);cursor:pointer}
+label{display:block;font-weight:500;font-size:14px;margin:12px 0 4px}
+textarea,input,select{width:100%;padding:9px 10px;border:1px solid var(--ln);border-radius:9px;background:var(--bg);color:var(--ink);font:400 15px var(--bs)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.row>*{flex:1;min-width:110px}
+.row label{margin-top:12px}
+.pri{background:var(--st);color:#fff;border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pri{color:#062a2b}}
+:root[data-theme="dark"] .pri{color:#062a2b}
+.sec{background:transparent;color:var(--ink);border:1px solid var(--ln);border-radius:10px;padding:10px 14px;font-weight:600;cursor:pointer}
+.tl{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.blk{position:relative;display:grid;grid-template-columns:70px 1fr;gap:12px;background:var(--sf);border:1px solid var(--ln);border-left:5px solid var(--ln);border-radius:12px;padding:12px 14px}
+.blk .t{font:700 14px/1.3 var(--hd)}.blk .t span{color:var(--mu);font-weight:600}
+.top{display:flex;gap:8px;align-items:baseline;justify-content:space-between}.len{color:var(--mu);font-size:13px}
+.blk p{margin:6px 0 0;font-size:14px}
+.fixed,.rest,.free{background:transparent;border-left-color:var(--ln)}.fixed .top b,.rest .top b,.free .top b{font-weight:500;color:var(--mu)}
+.study{border-left-color:var(--lv)}
+.study.live{border-left-color:var(--lv);background:var(--lvbg)}
+.study.due{border-left-color:var(--wn);background:var(--wnbg)}
+.study.done{border-left-color:var(--st);background:var(--stbg)}
+.now:not(.study){border-left-color:var(--lv)}
+.warn{color:var(--wn)}.err{color:var(--bd);min-height:1em}
+.pf{background:var(--sf);border-radius:8px;padding:8px 10px;margin-top:8px!important}
+.stamp{position:absolute;right:14px;top:10px;transform:rotate(-8deg);border:2px solid var(--st);color:var(--st);padding:2px 8px;border-radius:5px;font:800 11px/1.2 var(--hd);letter-spacing:.12em;text-transform:uppercase;background:var(--stbg)}
+.blk button{margin-top:8px}.pform{margin-top:8px}
+.empty{padding:22px;text-align:center;color:var(--mu);border:1px dashed var(--ln);border-radius:12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stats div{background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:12px}
+.stats b{display:block;font:800 22px var(--hd);color:var(--st)}.stats span{font-size:13px;color:var(--mu)}
+.chart{display:flex;gap:8px;align-items:end;height:130px;background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:12px 12px 8px;margin-bottom:14px}
+.chart div{flex:1;display:flex;flex-direction:column;justify-content:end;align-items:center;height:100%;font-size:11px;color:var(--mu)}
+.chart i{display:block;width:100%;background:var(--st);border-radius:4px 4px 0 0;min-height:2px}
+.ins li{margin:0 0 8px}.ins{padding-left:20px}
+#toast{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);font-weight:600;text-align:center;transform:translateY(110%);transition:transform .3s}
+#toast.on{transform:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<h1>Day Ledger</h1>
+<p class="sub">Write your day. Get a study plan. Prove every block.</p>
+<section class="sum" id="sum"></section>
+<nav class="tabs"><button data-v="today" class="on">Today</button><button data-v="ins">Insights</button></nav>
+
+<section id="today">
+<details id="setup" open>
+<summary>Your day</summary>
+<label for="txt">Describe your day in your own words, with times like “6 to 8 workout”</label>
+<textarea id="txt" rows="6" placeholder="6 to 8 workout, 11 am to 5:30 pm college, 8 pm to 9 pm dinner, 9 pm to 10 pm friends, 10 pm to 11 pm free"></textarea>
+<label for="goal">Goal</label>
+<input id="goal" placeholder="e.g. first AI/ML internship in 3 months">
+<div class="row">
+<div><label for="wake">Wake up</label><input type="time" id="wake"></div>
+<div><label for="sleep">Sleep</label><input type="time" id="sleep"></div>
+<div><label for="target">Study target (hours)</label><input type="number" id="target" min="1" max="10" step="0.5"></div>
+</div>
+<label for="topics">Topics to rotate (comma separated)</label>
+<input id="topics">
+<div class="row" style="margin-top:14px">
+<button class="pri" id="build">Build my plan</button>
+<button class="sec" id="rem">Turn on reminders</button>
+</div>
+<p class="mu" id="remmsg" style="font-size:13px"></p>
+</details>
+<ul class="tl" id="tl"></ul>
+</section>
+
+<section id="ins" hidden></section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const mem={};
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}};
+let D;try{D=JSON.parse(store.get('dl1'))}catch(e){}
+D=D||{};D.days=D.days||{};
+D.cfg=Object.assign({wake:'06:00',sleep:'00:45',target:5,topics:'Python, Pandas, SQL, Statistics',goal:'',text:''},D.cfg||{});
+const save=()=>store.set('dl1',JSON.stringify(D));
+const dkey=(d=new Date())=>d.toLocaleDateString('en-CA');
+const nowMin=()=>{const n=new Date();return n.getHours()*60+n.getMinutes()};
+const hm=m=>{m=((m%1440)+1440)%1440;const h=Math.floor(m/60),x=m%60;return((h%12)||12)+':'+String(x).padStart(2,'0')+(h>=12?'pm':'am')};
+const dur=m=>m>=60?Math.floor(m/60)+'h'+(m%60?' '+m%60+'m':''):m+'m';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mins=k=>((D.days[k]||{}).blocks||[]).reduce((a,b)=>a+(b.proof?b.proof.mins:0),0);
+
+/* ---------- parse the free-text day ---------- */
+function t24(h,m,ap){h=+h;m=+(m||0);if(ap){ap=ap.toLowerCase();if(ap=='pm'&&h<12)h+=12;if(ap=='am'&&h==12)h=0}return h*60+m}
+function parse(txt){
+  const re=/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*(?:to|-|–|till|until)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/gi;
+  const hits=[];let m;
+  while((m=re.exec(txt)))hits.push({i:m.index,e:re.lastIndex,m});
+  return hits.map((x,k)=>{
+    const [,h1,m1,a1,h2,m2,a2]=x.m;let s,e;
+    if(!a1&&!a2){const f=h=>+h>=1&&+h<=5?'pm':'';s=t24(h1,m1,f(h1));e=t24(h2,m2,f(h2))}
+    else{s=t24(h1,m1,a1||a2);e=t24(h2,m2,a2||a1)}
+    while(e<=s)e+=720;
+    const nx=hits[k+1];
+    let seg=txt.slice(x.e,nx?nx.i:undefined).split(/\b(?:then|and|so|but|because)\b/i)[0];
+    seg=seg.replace(/\b(from|my|is|i|am|ill|get|are|will)\b/gi,' ').replace(/[^a-zA-Z0-9& ]+/g,' ').replace(/\s+/g,' ').trim().split(' ').slice(0,3).join(' ');
+    seg=seg||'Busy';seg=seg[0].toUpperCase()+seg.slice(1);
+    const type=/free/i.test(seg)?'free':/rest|nap|break|relax/i.test(seg)?'rest':'fixed';
+    return{s,e,label:seg,type};
+  });
+}
+
+/* ---------- build the plan ---------- */
+function makePlan(c){
+  const [wh,wm]=c.wake.split(':').map(Number),[sh,sm]=c.sleep.split(':').map(Number);
+  const wake=wh*60+wm;let sleep=sh*60+sm;if(sleep<=wake)sleep+=1440;
+  let fx=parse(c.text).filter(b=>b.type!='free').map(b=>{if(b.s<wake&&b.s+1440<sleep){b.s+=1440;b.e+=1440}return b})
+    .filter(b=>b.s<sleep&&b.e>wake).sort((a,b)=>a.s-b.s);
+  const out=[];let cur=wake,prev='',gaps=[];
+  fx.forEach(b=>{b.s=Math.max(b.s,cur,wake);b.e=Math.min(b.e,sleep);if(b.e<=b.s)return;
+    if(b.s>cur)gaps.push({s:cur,e:b.s,prev});out.push(b);cur=b.e;prev=b.label});
+  if(sleep>cur)gaps.push({s:cur,e:sleep,prev,last:true});
+  const cand=[];
+  gaps.forEach(g=>{
+    let s=g.s,e=g.e;
+    if(g.last&&e-s>=45){out.push({s:e-30,e,label:'Wind down and plan tomorrow',type:'rest'});e-=30}
+    if(/college|class|lecture|office|school|lab/i.test(g.prev)&&e-s>=75){out.push({s,e:s+45,label:'Rest and recharge',type:'rest'});s+=45}
+    while(e-s>=40){
+      const rem=e-s,len=rem<=120?rem:105;
+      cand.push({s,e:s+len,type:'study'});s+=len;
+      const r2=e-s;if(r2>=50)s+=10;else break;
+    }
+    if(e-s>0)out.push({s,e,label:'Open time',type:'free'});
+  });
+  cand.sort((a,b)=>a.s-b.s);
+  const tg=Math.round(c.target*60),topics=c.topics.split(',').map(x=>x.trim()).filter(Boolean);
+  let acc=0,i=0;
+  cand.forEach(b=>{
+    const len=b.e-b.s,room=tg-acc;
+    if(room>=len){acc+=len;b.label='Study: '+(topics.length?topics[i++%topics.length]:'Focus work');out.push(b)}
+    else if(room>=30){b.label='Study: '+(topics.length?topics[i++%topics.length]:'Focus work');const e0=b.e;b.e=b.s+room;acc+=room;out.push(b);out.push({s:b.e,e:e0,label:'Open time',type:'free'})}
+    else out.push({s:b.s,e:b.e,label:'Open time',type:'free'});
+  });
+  out.sort((a,b)=>a.s-b.s);out.forEach((b,k)=>b.id=k+1);
+  return{blocks:out,found:fx.length};
+}
+
+/* ---------- render ---------- */
+function blk(b,n){
+  const st=b.type=='study'?(b.proof?'done':n<b.s?'up':n<b.e?'live':'due'):b.type;
+  let h=`<li class="blk ${b.type} ${st}${n>=b.s&&n<b.e?' now':''}" data-id="${b.id}"><div class="t">${hm(b.s)}<br><span>${hm(b.e)}</span></div><div><div class="top"><b>${esc(b.label)}</b><span class="len">${dur(b.e-b.s)}</span></div>`;
+  if(b.type=='study'){
+    if(b.proof)h+=`<p class="pf">${esc(b.proof.text)}</p><p class="mu">Focus ${b.proof.focus}/5. ${dur(b.proof.mins)} counted.</p><span class="stamp">Verified</span>`;
+    else if(st=='live')h+=`<p class="mu">In progress. Add proof when you finish.</p><button class="sec pf-open">Finish and add proof</button>`;
+    else if(st=='due')h+=`<p class="warn">Block ended. Add proof to count these ${dur(b.e-b.s)}.</p><button class="sec pf-open">Add proof</button>`;
+    else h+=`<p class="mu">Starts at ${hm(b.s)}. You get a reminder if this tab is open.</p>`;
+    if(!b.proof&&st!='up')h+=`<div class="pform" hidden><textarea rows="3" placeholder="What did you study and what did you produce? Use at least 6 words."></textarea><div class="row"><label>Focus<select>${[1,2,3,4,5].map(i=>`<option${i==4?' selected':''}>${i}</option>`).join('')}</select></label><button class="pri" data-act="sub">Submit proof</button></div><p class="err"></p></div>`;
+  }else if(b.type=='free')h+=`<p class="mu">Open time you could turn into study.</p>`;
+  return h+'</div></li>';
+}
+let lastSig='';
+function sigOf(){const d=D.days[dkey()];const n=nowMin();return d?d.blocks.map(b=>b.id+(b.proof?'d':n<b.s?'u':n<b.e?'l':'x')).join():''}
+function render(){
+  const k=dkey(),day=D.days[k],n=nowMin(),bl=day?day.blocks:[];
+  const plan=bl.filter(b=>b.type=='study').reduce((a,b)=>a+b.e-b.s,0),ver=mins(k);
+  $('#sum').innerHTML=`<div class="row2"><span class="v">${dur(ver)}</span><span>verified today of ${dur(plan)} planned</span></div><div class="bar"><i style="width:${plan?Math.min(100,ver/plan*100):0}%"></i></div>${D.cfg.goal?`<div class="mu" style="font-size:14px">Goal: ${esc(D.cfg.goal)}</div>`:''}`;
+  $('#tl').innerHTML=bl.length?bl.map(b=>blk(b,n)).join(''):`<li class="empty">No plan for today yet. Describe your day above and press Build my plan.</li>`;
+  lastSig=sigOf();
+}
+function renderIns(){
+  const all=Object.entries(D.days);
+  const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push({d,m:mins(dkey(d))})}
+  const mx=Math.max(60,...days.map(x=>x.m)),wk=days.reduce((a,x)=>a+x.m,0);
+  let streak=0;for(let i=0;i<90;i++){const d=new Date();d.setDate(d.getDate()-i);if(mins(dkey(d))>0)streak++;else if(i>0)break}
+  const study=all.flatMap(([k,d])=>d.blocks.filter(b=>b.type=='study').map(b=>({...b,k})));
+  const ver=study.filter(b=>b.proof),due=study.filter(b=>b.proof||b.k<dkey()||nowMin()>=b.e);
+  const bk={Morning:0,Afternoon:0,Evening:0,Night:0};
+  ver.forEach(b=>{const h=Math.floor((b.s%1440)/60);bk[h<12?'Morning':h<17?'Afternoon':h<21?'Evening':'Night']+=b.proof.mins});
+  const best=Object.entries(bk).sort((a,b)=>b[1]-a[1])[0];
+  const foc=ver.length?(ver.reduce((a,b)=>a+b.proof.focus,0)/ver.length).toFixed(1):'–';
+  const today=(D.days[dkey()]||{blocks:[]}).blocks,free=today.filter(b=>b.type=='free').reduce((a,b)=>a+b.e-b.s,0);
+  const li=[];
+  if(!study.length)li.push('Build a plan on the Today tab and your insights will appear here.');
+  else{
+    const pct=due.length?Math.round(ver.length/due.length*100):0;
+    li.push(`${ver.length} of ${due.length} finished study blocks have proof (${pct}%).${pct<70?' Blocks without proof do not count, so submit it right after each block.':''}`);
+    if(best[1]>0)li.push(`Your best window so far is ${best[0].toLowerCase()}, with ${dur(best[1])} verified. Put your hardest topic there.`);
+    if(free>=45)li.push(`You have ${dur(free)} of open time today. Raise your study target to turn it into blocks.`);
+    if(wk>0)li.push(`At this pace you will log about ${Math.round(wk/60*13)} verified hours in the next 3 months.`);
+  }
+  $('#ins').innerHTML=`<div class="stats"><div><b>${streak}</b><span>day streak</span></div><div><b>${dur(wk)}</b><span>verified, last 7 days</span></div><div><b>${foc}</b><span>average focus</span></div></div>
+  <div class="chart" role="img" aria-label="Verified study minutes for the last 7 days">${days.map(x=>`<div><i style="height:${x.m/mx*100}%"></i>${x.d.toLocaleDateString('en',{weekday:'short'})}</div>`).join('')}</div>
+  <ul class="ins">${li.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+}
+
+/* ---------- events ---------- */
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x==b));
+  $('#today').hidden=b.dataset.v!='today';$('#ins').hidden=b.dataset.v!='ins';if(b.dataset.v=='ins')renderIns();
+});
+$('#build').onclick=()=>{
+  D.cfg={wake:$('#wake').value||'06:00',sleep:$('#sleep').value||'00:45',target:+$('#target').value||5,topics:$('#topics').value,goal:$('#goal').value.trim(),text:$('#txt').value};
+  const old=D.days[dkey()],keep={};if(old)old.blocks.forEach(b=>{if(b.proof)keep[b.s+'-'+b.e]=b.proof});
+  const r=makePlan(D.cfg);r.blocks.forEach(b=>{if(b.type=='study'&&keep[b.s+'-'+b.e])b.proof=keep[b.s+'-'+b.e]});
+  D.days[dkey()]={blocks:r.blocks};save();$('#setup').open=false;render();renderIns();
+  if(!r.found)toast('No times like “6 to 8” found, so the plan uses only your wake and sleep times.');
+};
+$('#tl').addEventListener('click',e=>{
+  const li=e.target.closest('li');if(!li)return;
+  if(e.target.classList.contains('pf-open')){const f=li.querySelector('.pform');f.hidden=!f.hidden;if(!f.hidden)f.querySelector('textarea').focus();return}
+  if(e.target.dataset.act=='sub'){
+    const b=D.days[dkey()].blocks.find(x=>x.id==li.dataset.id),t=li.querySelector('textarea').value.trim(),err=li.querySelector('.err');
+    if(t.split(/\s+/).length<6){err.textContent='Write at least 6 words: what you studied and what you produced.';return}
+    if(Object.values(D.days).some(d=>d.blocks.some(x=>x.proof&&x.proof.text.toLowerCase()==t.toLowerCase()))){err.textContent='This proof was already used. Describe what is different this time.';return}
+    b.proof={text:t,focus:+li.querySelector('select').value,mins:Math.max(1,Math.min(b.e,nowMin())-b.s),at:Date.now()};
+    save();render();renderIns();toast('Proof saved. Block verified.');
+  }
+});
+
+/* ---------- reminders ---------- */
+let tt;function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('on'),6000)}
+function beep(){try{const a=new (window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);g.gain.value=.15;o.frequency.value=880;o.start();o.stop(a.currentTime+.25)}catch(e){}}
+function ping(t,b){toast(t+': '+b);beep();try{if(window.Notification&&Notification.permission=='granted')new Notification(t,{body:b})}catch(e){}}
+function remState(){let p='unsupported';try{p=Notification.permission}catch(e){}
+  $('#remmsg').textContent=p=='granted'?'Reminders are on. They work while this tab stays open.':p=='denied'?'Browser notifications are blocked. You still get an in-page alert and a beep while this tab is open.':'Reminders work while this tab is open. Turn on notifications to also get a system alert.'}
+$('#rem').onclick=()=>{try{Notification.requestPermission().then(remState)}catch(e){remState()}};
+const fired={};
+function tick(){
+  const k=dkey(),day=D.days[k];if(!day)return;const n=nowMin();
+  day.blocks.forEach(b=>{if(b.type!='study')return;
+    const a='s'+k+b.id,z='e'+k+b.id;
+    if(n>=b.s&&n<b.s+3&&!fired[a]){fired[a]=1;ping('Study block starting',b.label+' until '+hm(b.e))}
+    if(n>=b.e&&n<b.e+3&&!b.proof&&!fired[z]){fired[z]=1;ping('Block ended',`Add proof for ${b.label}`)}});
+  if(sigOf()!==lastSig&&!(document.activeElement&&document.activeElement.closest('#tl')))render();
+}
+setInterval(tick,15000);
+
+/* ---------- init ---------- */
+$('#txt').value=D.cfg.text;$('#goal').value=D.cfg.goal;$('#wake').value=D.cfg.wake;$('#sleep').value=D.cfg.sleep;$('#target').value=D.cfg.target;$('#topics').value=D.cfg.topics;
+if(D.days[dkey()])$('#setup').open=false;
+render();renderIns();remState();
+</script>
+</body>
+</html>
