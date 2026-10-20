@@ -75,7 +75,7 @@ textarea,input,select{width:100%;padding:9px 10px;border:1px solid var(--ln);bor
 <section id="today">
 <details id="setup" open>
 <summary>Your day</summary>
-<label for="txt">Describe your day in your own words, with times like “6 to 8 workout”</label>
+<label for="txt">Describe your day in your own words, with times like “6 to 8 workout”. List it in order, morning to night, and add am or pm when you can.</label>
 <textarea id="txt" rows="6" placeholder="6 to 8 workout, 11 am to 5:30 pm college, 8 pm to 9 pm dinner, 9 pm to 10 pm friends, 10 pm to 11 pm free"></textarea>
 <label for="goal">Goal</label>
 <input id="goal" placeholder="e.g. first AI/ML internship in 3 months">
@@ -116,21 +116,32 @@ const mins=k=>((D.days[k]||{}).blocks||[]).reduce((a,b)=>a+(b.proof?b.proof.mins
 
 /* ---------- parse the free-text day ---------- */
 function t24(h,m,ap){h=+h;m=+(m||0);if(ap){ap=ap.toLowerCase();if(ap=='pm'&&h<12)h+=12;if(ap=='am'&&h==12)h=0}return h*60+m}
-function parse(txt){
+function parse(txt,wake){
   const re=/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*(?:to|-|–|till|until)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/gi;
   const hits=[];let m;
   while((m=re.exec(txt)))hits.push({i:m.index,e:re.lastIndex,m});
+  let prevEnd=wake;
   return hits.map((x,k)=>{
-    const [,h1,m1,a1,h2,m2,a2]=x.m;let s,e;
-    if(!a1&&!a2){const f=h=>+h>=1&&+h<=5?'pm':'';s=t24(h1,m1,f(h1));e=t24(h2,m2,f(h2))}
-    else{s=t24(h1,m1,a1||a2);e=t24(h2,m2,a2||a1)}
-    while(e<=s)e+=720;
+    const [,h1,m1,a1,h2,m2,a2]=x.m;
     const nx=hits[k+1];
-    let seg=txt.slice(x.e,nx?nx.i:undefined).split(/\b(?:then|and|so|but|because)\b/i)[0];
-    seg=seg.replace(/\b(from|my|is|i|am|ill|get|are|will)\b/gi,' ').replace(/[^a-zA-Z0-9& ]+/g,' ').replace(/\s+/g,' ').trim().split(' ').slice(0,3).join(' ');
-    seg=seg||'Busy';seg=seg[0].toUpperCase()+seg.slice(1);
-    const type=/free/i.test(seg)?'free':/rest|nap|break|relax/i.test(seg)?'rest':'fixed';
-    return{s,e,label:seg,type};
+    const seg=txt.slice(x.e,nx?nx.i:undefined);
+    const clause=seg.split(/\b(?:then|and|so|but|because)\b/i)[0];
+    let lab=clause.replace(/\b(from|my|is|i|am|ill|get|are|will)\b/gi,' ').replace(/[^a-zA-Z0-9& ]+/g,' ').replace(/\s+/g,' ').trim().split(' ').slice(0,3).join(' ');
+    lab=lab||'Busy';lab=lab[0].toUpperCase()+lab.slice(1);
+    const low=clause.toLowerCase();
+    const hint=/dinner|supper|night|evening|tonight/.test(low)?'pm':/breakfast|morning|workout|gym|yoga|wake/.test(low)?'am':'';
+    let s,e,g=false;
+    if(a1||a2){s=t24(h1,m1,a1||a2);e=t24(h2,m2,a2||a1);while(e<=s)e+=720}
+    else{
+      g=true;const mm1=+(m1||0),mm2=+(m2||0);
+      if(+h1>12||+h1===0)s=+h1*60+mm1;
+      else{const base=(+h1%12)*60+mm1;s=hint=='pm'?base+720:hint=='am'?base:[base,base+720,base+1440,base+2160].find(v=>v>=prevEnd);}
+      if(+h2>12||+h2===0)e=+h2*60+mm2;else e=(+h2%12)*60+mm2;
+      while(e<=s)e+=+h2>12?1440:720;
+    }
+    prevEnd=e;
+    const type=/free/i.test(lab)?'free':/rest|nap|break|relax/i.test(lab)?'rest':/study|padhai|revision|revise|coding|dsa|practice|homework|assignment/i.test(lab)?'study':'fixed';
+    return{s,e,label:lab,type,g};
   });
 }
 
@@ -138,7 +149,7 @@ function parse(txt){
 function makePlan(c){
   const [wh,wm]=c.wake.split(':').map(Number),[sh,sm]=c.sleep.split(':').map(Number);
   const wake=wh*60+wm;let sleep=sh*60+sm;if(sleep<=wake)sleep+=1440;
-  let fx=parse(c.text).filter(b=>b.type!='free').map(b=>{if(b.s<wake&&b.s+1440<sleep){b.s+=1440;b.e+=1440}return b})
+  let fx=parse(c.text,wake).filter(b=>b.type!='free').map(b=>{if(b.s<wake&&b.s+1440<sleep){b.s+=1440;b.e+=1440}return b})
     .filter(b=>b.s<sleep&&b.e>wake).sort((a,b)=>a.s-b.s);
   const out=[];let cur=wake,prev='',gaps=[];
   fx.forEach(b=>{b.s=Math.max(b.s,cur,wake);b.e=Math.min(b.e,sleep);if(b.e<=b.s)return;
@@ -157,8 +168,9 @@ function makePlan(c){
     if(e-s>0)out.push({s,e,label:'Open time',type:'free'});
   });
   cand.sort((a,b)=>a.s-b.s);
-  const tg=Math.round(c.target*60),topics=c.topics.split(',').map(x=>x.trim()).filter(Boolean);
-  let acc=0,i=0;
+  const tg=Math.round(c.target*60),topics=c.topics.split(/,(?![^(]*\))/).map(x=>x.trim()).filter(Boolean);
+  let acc=out.filter(b=>b.type=='study').reduce((a,b)=>a+b.e-b.s,0),i=0;
+  out.filter(b=>b.type=='study'&&/^study$/i.test(b.label)).forEach(b=>{if(topics.length)b.label='Study: '+topics[i++%topics.length]});
   cand.forEach(b=>{
     const len=b.e-b.s,room=tg-acc;
     if(room>=len){acc+=len;b.label='Study: '+(topics.length?topics[i++%topics.length]:'Focus work');out.push(b)}
@@ -172,7 +184,7 @@ function makePlan(c){
 /* ---------- render ---------- */
 function blk(b,n){
   const st=b.type=='study'?(b.proof?'done':n<b.s?'up':n<b.e?'live':'due'):b.type;
-  let h=`<li class="blk ${b.type} ${st}${n>=b.s&&n<b.e?' now':''}" data-id="${b.id}"><div class="t">${hm(b.s)}<br><span>${hm(b.e)}</span></div><div><div class="top"><b>${esc(b.label)}</b><span class="len">${dur(b.e-b.s)}</span></div>`;
+  let h=`<li class="blk ${b.type} ${st}${n>=b.s&&n<b.e?' now':''}" data-id="${b.id}"><div class="t">${hm(b.s)}<br><span>${hm(b.e)}</span></div><div><div class="top"><b>${esc(b.label)}</b><span class="len">${dur(b.e-b.s)}${b.g?' (am/pm guessed)':''}</span></div>`;
   if(b.type=='study'){
     if(b.proof)h+=`<p class="pf">${esc(b.proof.text)}</p><p class="mu">Focus ${b.proof.focus}/5. ${dur(b.proof.mins)} counted.</p><span class="stamp">Verified</span>`;
     else if(st=='live')h+=`<p class="mu">In progress. Add proof when you finish.</p><button class="sec pf-open">Finish and add proof</button>`;
